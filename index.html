@@ -187,12 +187,13 @@ a{cursor:pointer;}
   .modal { padding: 16px; max-width: 95vw !important; }
   .form-grid { grid-template-columns: 1fr; }
   .form-full { grid-column: 1; }
-  .gunluk-wrap { max-width: 100% !important; width: 100% !important; padding: 0 4px; }
-  #page-gunluk { align-items: flex-start !important; }
-  .cal-grid { gap: 3px; }
-  .cal-day { font-size: 14px; border-radius: 8px; }
-  .cal-title { font-size: 18px; }
-  .cal-header { margin-bottom: 8px; }
+  .gunluk-wrap { max-width: 100% !important; width: 100% !important; }
+  #page-gunluk { align-items: flex-start !important; padding: 52px 8px 16px !important; }
+  .cal-grid { gap: 4px; margin-bottom: 8px; }
+  .cal-days-label { gap: 4px; }
+  .cal-day { font-size: 15px; border-radius: 8px; aspect-ratio: 1; }
+  .cal-title { font-size: 20px; }
+  .cal-header { margin-bottom: 12px; }
   .cal-day { font-size: 11px; border-radius: 6px; }
   .cal-title { font-size: 16px; }
   /* İstatistik panosu mobil */
@@ -599,11 +600,14 @@ async function syncToSupabase() {
 }
 
 async function initSync() {
-  load(); // Önce localStorage'dan yükle (hızlı açılış)
+  load();
   render();
-  showToast('Veriler senkronize ediliyor...');
+  showToast('Senkronize ediliyor...');
   const synced = await loadFromSupabase();
-  if (synced) { render(); showToast('Senkronize edildi!'); }
+  if (synced) { render(); }
+  const plans = await loadPlansFromSupabase();
+  if (plans) { renderPlans(); }
+  if (synced || plans) showToast('Senkronize edildi!');
 }
 function save(){
   localStorage.setItem(STORAGE_KEY,JSON.stringify(entries));
@@ -619,15 +623,17 @@ function savePlans(p){
 
 async function syncPlansToSupabase(plans) {
   try {
-    await fetch(SUPABASE_URL + '/rest/v1/planlar?id=gt.0', {
+    // Önce hepsini sil
+    await fetch(SUPABASE_URL + '/rest/v1/planlar?id=gte.0', {
       method: 'DELETE',
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
     });
-    for (const plan of plans) {
+    // Sonra hepsini ekle
+    if (plans.length > 0) {
       await fetch(SUPABASE_URL + '/rest/v1/planlar', {
         method: 'POST',
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ data: plan })
+        body: JSON.stringify(plans.map(p => ({ data: p })))
       });
     }
   } catch(e) { console.error('Plan sync error:', e); }
@@ -1157,25 +1163,6 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Escape'){closeModa
 
 initSync();
 
-// Restore active page
-const savedPage = localStorage.getItem('turkar_active_page');
-if (savedPage && savedPage !== 'musteri') {
-  showPage(savedPage);
-  // Also restore active nav
-  document.querySelectorAll('.nav-item').forEach(btn => {
-    if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes("'" + savedPage + "'")) {
-      setActiveNav(btn);
-    }
-  });
-} else {
-  showPage('musteri');
-}
-
-// Load plans from Supabase
-loadPlansFromSupabase().then(plans => {
-  if (plans) renderPlans();
-});
-
 /* MOBİL HAMBURGER */
 function toggleSidebar() {
   const sidebar = document.getElementById('sidebar');
@@ -1189,7 +1176,6 @@ function closeSidebar() {
   document.getElementById('sidebar-overlay').classList.remove('open');
   document.body.classList.remove('sidebar-open');
 }
-// Close sidebar on nav item click on mobile
 document.querySelectorAll('.nav-item').forEach(btn => {
   btn.addEventListener('click', () => {
     if (window.innerWidth <= 768) closeSidebar();
@@ -1198,6 +1184,19 @@ document.querySelectorAll('.nav-item').forEach(btn => {
 
 const _now=new Date();calYear=_now.getFullYear();calMonth=_now.getMonth();
 renderCal();render();renderPlans();
+
+// Sayfa restore - en sona al
+const savedPage = localStorage.getItem('turkar_active_page');
+if (savedPage && savedPage !== 'musteri') {
+  setTimeout(() => {
+    showPage(savedPage);
+    document.querySelectorAll('.nav-item').forEach(btn => {
+      if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes("'" + savedPage + "'")) {
+        setActiveNav(btn);
+      }
+    });
+  }, 100);
+}
 </script>
 </body>
 </html>
