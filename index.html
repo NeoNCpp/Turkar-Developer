@@ -617,27 +617,27 @@ function loadNotes(){try{return JSON.parse(localStorage.getItem(NOTE_KEY))||{};}
 function saveNotes(n){localStorage.setItem(NOTE_KEY,JSON.stringify(n));}
 function loadPlans(){try{return JSON.parse(localStorage.getItem(PLAN_KEY))||[];}catch(e){return [];}}
 function savePlans(p){
+  console.log('savePlans called, count:', p.length);
   localStorage.setItem(PLAN_KEY,JSON.stringify(p));
-  syncPlansToSupabase(p).catch(console.error);
+  syncPlansToSupabase(p).catch(e => console.error('syncPlans catch:', e));
 }
 
 async function syncPlansToSupabase(plans) {
   try {
+    console.log('syncPlans start, plans:', plans.length);
     const headers = { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' };
-    // Tümünü sil - id=gte.1 kullan
     const delRes = await fetch(SUPABASE_URL + '/rest/v1/planlar?id=gte.1', { method: 'DELETE', headers });
-    console.log('Plan delete status:', delRes.status);
-    // Yeniden ekle
+    console.log('delete status:', delRes.status, await delRes.text());
     if (plans.length > 0) {
       const res = await fetch(SUPABASE_URL + '/rest/v1/planlar', {
         method: 'POST',
         headers: { ...headers, 'Prefer': 'return=minimal' },
         body: JSON.stringify(plans.map(p => ({ data: p })))
       });
-      console.log('Plan insert status:', res.status);
-      if (!res.ok) console.error('Plan insert error:', await res.text());
+      const txt = await res.text();
+      console.log('insert status:', res.status, txt);
     }
-  } catch(e) { console.error('Plan sync error:', e); }
+  } catch(e) { console.error('syncPlans error:', e); }
 }
 
 async function loadPlansFromSupabase() {
@@ -1207,6 +1207,14 @@ window.addEventListener('load', function(){
     }
   } catch(e){ console.error('Restore error:', e); }
 });
+
+// Otomatik senkronizasyon - her 30 saniyede bir
+setInterval(async () => {
+  const synced = await loadFromSupabase();
+  if (synced) render();
+  const plans = await loadPlansFromSupabase();
+  if (plans) renderPlans();
+}, 30000);
 </script>
 </body>
 </html>
