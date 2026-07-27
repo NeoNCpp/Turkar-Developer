@@ -666,13 +666,19 @@ function showPage(page){
   el.classList.remove('hidden');
   if(page==='gunluk')el.style.display='flex';
   else el.style.display='';
-  if(page==='istatistik'||page==='gunluk'||page==='planlamalar'||page==='sablonlar'){
-    document.querySelector('.topbar').style.display='none';
-    if(page==='istatistik')renderIstatistik();
-    if(page==='sablonlar')renderSablonlar().catch(console.error);
-  }else{
-    document.querySelector('.topbar').style.display='';
-  }
+  try {
+    const topbar = document.querySelector('.topbar');
+    if(topbar){
+      if(page==='istatistik'||page==='gunluk'||page==='planlamalar'||page==='sablonlar'){
+        topbar.style.display='none';
+      } else {
+        topbar.style.display='';
+      }
+    }
+  } catch(e){}
+  if(page==='istatistik') try{renderIstatistik();}catch(e){}
+  if(page==='sablonlar') try{renderSablonlar();}catch(e){}
+  if(page==='planlamalar') try{renderPlans();}catch(e){}
 }
 function setActiveNav(btn){document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));btn.classList.add('active');}
 
@@ -1189,6 +1195,7 @@ renderCal();render();renderPlans();
 window.addEventListener('load', function(){
   try {
     const sp = localStorage.getItem('turkar_active_page');
+    console.log('Restore page:', sp);
     if (sp) {
       showPage(sp);
       document.querySelectorAll('.nav-item').forEach(btn => {
