@@ -656,6 +656,7 @@ function esc(s){return s?String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').re
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400);}
 
 function showPage(page){
+  localStorage.setItem('turkar_active_page', page);
   ['musteri','gunluk','planlamalar','istatistik','sablonlar'].forEach(p=>{
     const el=document.getElementById('page-'+p);
     if(el){el.classList.add('hidden');el.style.display='';}
