@@ -1185,18 +1185,18 @@ const _now=new Date();calYear=_now.getFullYear();calMonth=_now.getMonth();
 renderCal();render();renderPlans();
 
 // Sayfa restore
-(function(){
+window.addEventListener('load', function(){
   try {
     const sp = localStorage.getItem('turkar_active_page');
-    if (sp && sp !== 'musteri') {
+    if (sp) {
       showPage(sp);
       document.querySelectorAll('.nav-item').forEach(btn => {
         const oc = btn.getAttribute('onclick')||'';
         if (oc.includes("'"+sp+"'")) setActiveNav(btn);
       });
     }
-  } catch(e){}
-})();
+  } catch(e){ console.error('Restore error:', e); }
+});
 </script>
 </body>
 </html>
