@@ -535,6 +535,9 @@ a{cursor:pointer;}
   </div>
 </div>
 
+<!-- MOBİL FLOATING BUTON -->
+<button id="mobile-add-btn" onclick="openModal()" style="display:none;position:fixed;bottom:24px;right:24px;z-index:150;background:var(--ruby);border:none;border-radius:50%;width:56px;height:56px;color:#fff;font-size:28px;cursor:pointer;box-shadow:0 0 20px var(--glow);align-items:center;justify-content:center;">+</button>
+
 <div class="toast" id="toast"></div>
 <input type="file" id="import-file" class="hidden" accept=".json" onchange="handleImport(event)">
 
@@ -664,6 +667,9 @@ function showPage(page){
   if(page==='istatistik') try{renderIstatistik();}catch(e){}
   if(page==='sablonlar') try{renderSablonlar();}catch(e){}
   if(page==='planlamalar') try{renderPlans();}catch(e){}
+  // Mobil + butonu
+  const mobileBtn = document.getElementById('mobile-add-btn');
+  if(mobileBtn) mobileBtn.style.display = (window.innerWidth<=768 && page==='musteri') ? 'flex' : 'none';
 }
 function setActiveNav(btn){document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));btn.classList.add('active');}
 
