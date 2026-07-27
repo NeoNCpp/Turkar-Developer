@@ -623,18 +623,17 @@ function savePlans(p){
 
 async function syncPlansToSupabase(plans) {
   try {
-    // Önce hepsini sil
-    await fetch(SUPABASE_URL + '/rest/v1/planlar?id=gte.0', {
-      method: 'DELETE',
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-    });
-    // Sonra hepsini ekle
+    const headers = { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' };
+    // Tümünü sil
+    await fetch(SUPABASE_URL + '/rest/v1/planlar?created_at=gte.2000-01-01', { method: 'DELETE', headers });
+    // Yeniden ekle
     if (plans.length > 0) {
-      await fetch(SUPABASE_URL + '/rest/v1/planlar', {
+      const res = await fetch(SUPABASE_URL + '/rest/v1/planlar', {
         method: 'POST',
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        headers: { ...headers, 'Prefer': 'return=minimal' },
         body: JSON.stringify(plans.map(p => ({ data: p })))
       });
+      if (!res.ok) console.error('Plan insert error:', await res.text());
     }
   } catch(e) { console.error('Plan sync error:', e); }
 }
@@ -1185,18 +1184,19 @@ document.querySelectorAll('.nav-item').forEach(btn => {
 const _now=new Date();calYear=_now.getFullYear();calMonth=_now.getMonth();
 renderCal();render();renderPlans();
 
-// Sayfa restore - en sona al
-const savedPage = localStorage.getItem('turkar_active_page');
-if (savedPage && savedPage !== 'musteri') {
-  setTimeout(() => {
-    showPage(savedPage);
-    document.querySelectorAll('.nav-item').forEach(btn => {
-      if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes("'" + savedPage + "'")) {
-        setActiveNav(btn);
-      }
-    });
-  }, 100);
-}
+// Sayfa restore
+(function(){
+  try {
+    const sp = localStorage.getItem('turkar_active_page');
+    if (sp && sp !== 'musteri') {
+      showPage(sp);
+      document.querySelectorAll('.nav-item').forEach(btn => {
+        const oc = btn.getAttribute('onclick')||'';
+        if (oc.includes("'"+sp+"'")) setActiveNav(btn);
+      });
+    }
+  } catch(e){}
+})();
 </script>
 </body>
 </html>
