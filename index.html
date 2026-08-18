@@ -1541,13 +1541,28 @@ function openTurkarReadModal(id) {
   document.getElementById('turkar-read-view-title').textContent = n.title || '(Başlıksız)';
   const contentEl = document.getElementById('turkar-read-view-content');
   contentEl.innerHTML = n.content || '';
-  // Checkbox'lara event listener ekle
+  // Checkbox durumlarını restore et
   contentEl.querySelectorAll('.turkar-check-item input[type=checkbox]').forEach(cb => {
+    if (cb.hasAttribute('checked')) {
+      cb.checked = true;
+      const txt = cb.parentElement.querySelector('.tc-text');
+      if(txt){ txt.style.textDecoration = 'line-through'; txt.style.opacity = '0.5'; }
+    }
     cb.addEventListener('change', function() {
       const txt = this.parentElement.querySelector('.tc-text');
       if(txt){
         txt.style.textDecoration = this.checked ? 'line-through' : 'none';
         txt.style.opacity = this.checked ? '0.5' : '1';
+      }
+      // Güncel HTML'i kaydet
+      const notes = loadTurkarNotes();
+      const noteIdx = notes.findIndex(x => x.id === currentTurkarNoteId);
+      if (noteIdx !== -1) {
+        // checked attribute'u güncelle ki HTML'de saklansın
+        if (this.checked) this.setAttribute('checked', 'checked');
+        else this.removeAttribute('checked');
+        notes[noteIdx].content = contentEl.innerHTML;
+        localStorage.setItem(TURKAR_KEY, JSON.stringify(notes));
       }
     });
   });
