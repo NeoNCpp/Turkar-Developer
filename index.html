@@ -240,6 +240,9 @@ a{cursor:pointer;}
   html { overflow-x: hidden; }
   body { overflow-x: hidden; width: 100%; }
 }
+#turkar-read-view-content .turkar-check-item { display:flex !important; align-items:center !important; gap:10px !important; margin:8px 0 !important; }
+#turkar-read-view-content .turkar-check-item input[type=checkbox] { width:16px !important; height:16px !important; min-width:16px !important; accent-color:#00d4ff !important; cursor:pointer !important; flex-shrink:0 !important; filter:drop-shadow(0 0 5px #00d4ff) !important; }
+#turkar-read-view-content .tc-text { color:#c8e8ff !important; }
 </style>
 </head>
 <body style="overflow-x:hidden;">
@@ -578,8 +581,8 @@ a{cursor:pointer;}
 </main>
 
 <!-- TÜRKAR NOT YAZMA MODALI -->
-<div id="turkar-note-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,5,0.88);z-index:400;align-items:center;justify-content:center;backdrop-filter:blur(8px);">
-  <div style="background:linear-gradient(135deg,#080818,#0d1030);border:1px solid #00d4ff66;border-radius:18px;padding:28px;width:90%;max-width:640px;box-shadow:0 0 60px #00d4ff22,0 0 120px #7b2fff11;max-height:90vh;overflow-y:auto;">
+<div id="turkar-note-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,5,0.3);z-index:400;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
+  <div style="background:linear-gradient(135deg,#080818,#0d1030);border:1px solid #00d4ff33;border-radius:18px;padding:28px;width:98%;max-width:1200px;height:96vh;display:flex;flex-direction:column;box-shadow:0 0 40px #00d4ff18;overflow:hidden;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
       <div style="font-family:'Eternalo',sans-serif;font-size:18px;letter-spacing:3px;color:#00d4ff;">YENİ NOT</div>
       <button onclick="closeTurkarNoteModal()" style="background:transparent;border:1px solid #ffffff22;color:#aaa;border-radius:8px;padding:4px 10px;cursor:pointer;font-size:16px;">✕</button>
@@ -603,8 +606,10 @@ a{cursor:pointer;}
       <button onmousedown="saveTurkarRange()" onclick="insertTurkarCheckbox('turkar-editor')" style="background:transparent;border:1px solid #00d4ff33;color:#00d4ff;border-radius:5px;padding:3px 8px;cursor:pointer;font-size:12px;" title="Madde ekle">☐</button>
       <button onmousedown="event.preventDefault()" onclick="openTurkarClearConfirm('turkar-editor')" style="background:transparent;border:1px solid #ff444433;color:#ff4444;border-radius:5px;padding:3px 8px;cursor:pointer;font-size:14px;" title="İçeriği temizle"><i class="ti ti-trash"></i></button>
     </div>
-    <div id="turkar-editor" contenteditable="true" onkeyup="applyBoldSyntax('turkar-editor')" style="min-height:320px;background:#0a0a1a;border:1px solid #00d4ff22;border-radius:8px;color:#c8e8ff;font-size:15px;font-family:'Inter',sans-serif;line-height:1.9;outline:none;padding:18px;margin-bottom:16px;"></div>
-    <div style="display:flex;justify-content:flex-end;gap:10px;">
+    <div style="flex:1;overflow-y:auto;padding-bottom:8px;">
+      <div id="turkar-editor" contenteditable="true" onkeyup="applyBoldSyntax('turkar-editor')" style="min-height:100%;background:#0a0a1a;border:1px solid #00d4ff22;border-radius:8px;color:#c8e8ff;font-size:15px;font-family:'Inter',sans-serif;line-height:1.9;outline:none;padding:18px;box-sizing:border-box;"></div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:10px;flex-shrink:0;padding-top:12px;">
       <button onclick="closeTurkarNoteModal()" style="background:transparent;border:1px solid #ffffff22;color:#aaa;border-radius:8px;padding:8px 20px;cursor:pointer;font-size:13px;">İptal</button>
       <button onclick="saveTurkarNote()" style="background:linear-gradient(135deg,#00d4ff22,#0a3a5a33);border:1px solid #00d4ff;color:#00d4ff;border-radius:10px;padding:10px 28px;cursor:pointer;font-family:'Eternalo',sans-serif;font-size:13px;letter-spacing:2px;box-shadow:0 0 15px #00d4ff33;">KAYDET</button>
     </div>
@@ -626,7 +631,7 @@ a{cursor:pointer;}
         </div>
       </div>
       <div style="flex:1;overflow-y:auto;">
-        <div id="turkar-read-view-content" style="color:#c8e8ff;font-size:15px;font-family:'Inter',sans-serif;line-height:1.9;height:100%;background:#05080f;border-radius:10px;padding:20px;border:1px solid #0a1a2a;box-sizing:border-box;"></div>
+        <div id="turkar-read-view-content" contenteditable="false" style="color:#c8e8ff;font-size:15px;font-family:'Inter',sans-serif;line-height:1.9;height:100%;background:#05080f;border-radius:10px;padding:20px;border:1px solid #0a1a2a;box-sizing:border-box;"></div>
       </div>
     </div>
 
@@ -682,6 +687,19 @@ a{cursor:pointer;}
     <div style="display:flex;gap:12px;justify-content:center;">
       <button onclick="confirmTurkarClear()" style="background:linear-gradient(135deg,#ff444422,#ff444411);border:1px solid #ff4444;color:#ff4444;border-radius:8px;padding:8px 24px;cursor:pointer;font-size:13px;letter-spacing:1px;">Evet, Sil</button>
       <button onclick="closeTurkarClearConfirm()" style="background:transparent;border:1px solid #00d4ff33;color:#00d4ff;border-radius:8px;padding:8px 24px;cursor:pointer;font-size:13px;">Hayır</button>
+    </div>
+  </div>
+</div>
+
+<!-- TÜRKAR SİL CONFIRM -->
+<div id="turkar-delete-confirm" style="display:none;position:fixed;inset:0;background:rgba(0,0,5,0.7);z-index:600;align-items:center;justify-content:center;backdrop-filter:blur(6px);">
+  <div style="background:linear-gradient(135deg,#080818,#0d1030);border:1px solid #ff444466;border-radius:16px;padding:32px 36px;max-width:380px;width:90%;text-align:center;box-shadow:0 0 40px #ff444422;">
+    <div style="font-size:32px;margin-bottom:12px;color:#ff4444;"><i class="ti ti-trash"></i></div>
+    <div style="font-family:'Eternalo',sans-serif;font-size:16px;color:#ff4444;letter-spacing:2px;margin-bottom:8px;">NOTU SİL</div>
+    <div style="font-size:13px;color:#7aaec8;margin-bottom:24px;line-height:1.6;">Bu notu silmek istediğinize<br>emin misiniz?</div>
+    <div style="display:flex;gap:12px;justify-content:center;">
+      <button onclick="confirmTurkarDelete()" style="background:linear-gradient(135deg,#ff444422,#ff444411);border:1px solid #ff4444;color:#ff4444;border-radius:8px;padding:8px 24px;cursor:pointer;font-size:13px;letter-spacing:1px;">Evet, Sil</button>
+      <button onclick="document.getElementById('turkar-delete-confirm').style.display='none'" style="background:transparent;border:1px solid #00d4ff33;color:#00d4ff;border-radius:8px;padding:8px 24px;cursor:pointer;font-size:13px;">Hayır</button>
     </div>
   </div>
 </div>
@@ -1148,9 +1166,7 @@ function renderIstatistik(){
     </div>`).join('');
 }
 
-/* ŞABLONLAR */
-
-/* TÜRKAR NOTES */
+/* ŞABLONLAR *//* TÜRKAR NOTES */
 const TURKAR_KEY = 'turkar_notes_private_v1';
 const TURKAR_MOTTO_KEY = 'turkar_motto_v1';
 let turkarUnlocked = false;
@@ -1523,7 +1539,18 @@ function openTurkarReadModal(id) {
   if (!n) return;
   currentTurkarNoteId = id;
   document.getElementById('turkar-read-view-title').textContent = n.title || '(Başlıksız)';
-  document.getElementById('turkar-read-view-content').innerHTML = n.content || '';
+  const contentEl = document.getElementById('turkar-read-view-content');
+  contentEl.innerHTML = n.content || '';
+  // Checkbox'lara event listener ekle
+  contentEl.querySelectorAll('.turkar-check-item input[type=checkbox]').forEach(cb => {
+    cb.addEventListener('change', function() {
+      const txt = this.parentElement.querySelector('.tc-text');
+      if(txt){
+        txt.style.textDecoration = this.checked ? 'line-through' : 'none';
+        txt.style.opacity = this.checked ? '0.5' : '1';
+      }
+    });
+  });
   document.getElementById('turkar-read-title').value = n.title || '';
   document.getElementById('turkar-read-editor').innerHTML = n.content || '';
   document.getElementById('turkar-read-view').style.display = 'flex';
@@ -1563,9 +1590,14 @@ function saveTurkarReadEdit() {
 
 function deleteTurkarCurrentNote() {
   if (!currentTurkarNoteId) return;
-  if (!confirm('Bu notu silmek istediğinden emin misin?')) return;
+  document.getElementById('turkar-delete-confirm').style.display = 'flex';
+}
+
+function confirmTurkarDelete() {
+  if (!currentTurkarNoteId) return;
   const notes = loadTurkarNotes().filter(n => n.id !== currentTurkarNoteId);
   localStorage.setItem(TURKAR_KEY, JSON.stringify(notes));
+  document.getElementById('turkar-delete-confirm').style.display = 'none';
   closeTurkarReadModal();
   renderTurkarNotes();
 }
