@@ -600,6 +600,7 @@ a{cursor:pointer;}
         <option value="7">Çok Büyük</option>
       </select>
       <input type="color" onchange="turkarColor(this.value)" value="#e0f0ff" style="width:28px;height:26px;background:transparent;border:1px solid #00d4ff33;border-radius:5px;cursor:pointer;padding:2px;">
+      <button onmousedown="saveTurkarRange()" onclick="insertTurkarCheckbox('turkar-editor')" style="background:transparent;border:1px solid #00d4ff33;color:#00d4ff;border-radius:5px;padding:3px 8px;cursor:pointer;font-size:12px;" title="Madde ekle">☐</button>
       <button onmousedown="event.preventDefault()" onclick="openTurkarClearConfirm('turkar-editor')" style="background:transparent;border:1px solid #ff444433;color:#ff4444;border-radius:5px;padding:3px 8px;cursor:pointer;font-size:14px;" title="İçeriği temizle"><i class="ti ti-trash"></i></button>
     </div>
     <div id="turkar-editor" contenteditable="true" onkeyup="applyBoldSyntax('turkar-editor')" style="min-height:320px;background:#0a0a1a;border:1px solid #00d4ff22;border-radius:8px;color:#c8e8ff;font-size:15px;font-family:'Inter',sans-serif;line-height:1.9;outline:none;padding:18px;margin-bottom:16px;"></div>
@@ -651,6 +652,7 @@ a{cursor:pointer;}
           <option value="">Boyut</option><option value="1">Küçük</option><option value="3">Normal</option><option value="5">Büyük</option><option value="7">Çok Büyük</option>
         </select>
         <input type="color" onchange="turkarReadColor(this.value)" value="#e0f0ff" style="width:28px;height:26px;background:transparent;border:1px solid #00d4ff33;border-radius:5px;cursor:pointer;padding:2px;">
+        <button onmousedown="saveTurkarRange()" onclick="insertTurkarCheckbox('turkar-read-editor')" style="background:transparent;border:1px solid #00d4ff33;color:#00d4ff;border-radius:5px;padding:3px 8px;cursor:pointer;font-size:12px;" title="Madde ekle">☐</button>
         <button onmousedown="event.preventDefault()" onclick="openTurkarClearConfirm('turkar-read-editor')" style="background:transparent;border:1px solid #ff444433;color:#ff4444;border-radius:5px;padding:3px 8px;cursor:pointer;font-size:14px;" title="İçeriği temizle"><i class="ti ti-trash"></i></button>
       </div>
       </div>
@@ -1195,18 +1197,48 @@ function turkarExec(cmd) {
 
 function turkarFontSize(size) {
   if (!size) return;
-  document.getElementById('turkar-editor').focus();
+  const ed = document.getElementById('turkar-editor');
+  if (!ed) return;
+  // Seçili alana uygula
+  ed.focus();
   document.execCommand('fontSize', false, size);
+  // Checkbox span'larına da uygula
+  const sizeMap = {'1':'10px','2':'13px','3':'16px','4':'18px','5':'24px','6':'32px','7':'48px'};
+  const px = sizeMap[size] || '16px';
+  const sel = window.getSelection();
+  if (sel.rangeCount) {
+    let node = sel.getRangeAt(0).startContainer;
+    if (node.nodeType === 3) node = node.parentNode;
+    while (node && node !== ed) {
+      if (node.classList && node.classList.contains('tc-text')) {
+        node.style.fontSize = px;
+        break;
+      }
+      node = node.parentNode;
+    }
+  }
 }
 
-function turkarColor(color) {
-  document.getElementById('turkar-editor').focus();
-  document.execCommand('foreColor', false, color);
-}
-
-function insertBullet() {
-  document.getElementById('turkar-editor').focus();
-  document.execCommand('insertText', false, '• ');
+function turkarReadFontSize(s) {
+  if(!s) return;
+  const ed = document.getElementById('turkar-read-editor');
+  if (!ed) return;
+  ed.focus();
+  document.execCommand('fontSize', false, s);
+  const sizeMap = {'1':'10px','2':'13px','3':'16px','4':'18px','5':'24px','6':'32px','7':'48px'};
+  const px = sizeMap[s] || '16px';
+  const sel = window.getSelection();
+  if (sel.rangeCount) {
+    let node = sel.getRangeAt(0).startContainer;
+    if (node.nodeType === 3) node = node.parentNode;
+    while (node && node !== ed) {
+      if (node.classList && node.classList.contains('tc-text')) {
+        node.style.fontSize = px;
+        break;
+      }
+      node = node.parentNode;
+    }
+  }
 }
 
 function loadTurkarNotes() {
@@ -1309,7 +1341,161 @@ function initTurkarCanvas() {
 
 
 
+
+function insertTurkarCheckbox(editorId) {
+  const ed = document.getElementById(editorId);
+  if (!ed) return;
+
+  let targetNode = null;
+  let isAfterCheckbox = false;
+
+  if (savedTurkarLine && savedTurkarLine.edId === editorId) {
+    const child = savedTurkarLine.child;
+    if (child && (child.parentNode === ed || child === ed.childNodes[0])) {
+      if (child.classList && child.classList.contains('turkar-check-item')) {
+        targetNode = child;
+        isAfterCheckbox = true;
+      } else {
+        targetNode = child;
+      }
+    }
+  }
+
+  const row = document.createElement('div');
+  row.className = 'turkar-check-item';
+  row.setAttribute('contenteditable', 'false');
+  row.style.cssText = 'display:flex;align-items:center;gap:8px;margin:4px 0;width:100%;';
+
+  const cb = document.createElement('input');
+  cb.type = 'checkbox';
+  cb.style.cssText = 'width:16px;height:16px;min-width:16px;accent-color:#00d4ff;cursor:pointer;flex-shrink:0;filter:drop-shadow(0 0 5px #00d4ff);';
+  cb.addEventListener('change', function() {
+    const txt = row.querySelector('.tc-text');
+    if(txt){
+      txt.style.textDecoration = this.checked ? 'line-through' : 'none';
+      txt.style.opacity = this.checked ? '0.5' : '1';
+    }
+  });
+
+  const span = document.createElement('span');
+  span.className = 'tc-text';
+  span.setAttribute('contenteditable', 'true');
+  span.style.cssText = 'outline:none;flex:1;color:#c8e8ff;word-wrap:break-word;';
+
+  if (isAfterCheckbox && targetNode) {
+    row.appendChild(cb);
+    row.appendChild(span);
+    if (targetNode.nextSibling) {
+      ed.insertBefore(row, targetNode.nextSibling);
+    } else {
+      ed.appendChild(row);
+    }
+  } else if (targetNode) {
+    // Text node veya element node - metnini al ve yerine koy
+    const text = targetNode.textContent || targetNode.nodeValue || '';
+    span.textContent = text;
+    row.appendChild(cb);
+    row.appendChild(span);
+    // targetNode'un parent'ı ed ise direkt, değilse wrapper'ı bul
+    const insertBefore = targetNode.parentNode === ed ? targetNode : null;
+    if (insertBefore) {
+      ed.insertBefore(row, insertBefore);
+      insertBefore.remove();
+    } else {
+      ed.insertBefore(row, ed.childNodes[0]);
+    }
+  } else {
+    row.appendChild(cb);
+    row.appendChild(span);
+    ed.appendChild(row);
+  }
+
+  // Delete tuşuyla boş kutucuğu sil
+  span.addEventListener('keydown', function(e) {
+    if ((e.key === 'Backspace' || e.key === 'Delete') && span.textContent === '') {
+      e.preventDefault();
+      const prevRow = row.previousSibling;
+      row.remove();
+      // Önceki satır varsa ona focus at
+      if (prevRow) {
+        const prevSpan = prevRow.querySelector && prevRow.querySelector('.tc-text');
+        if (prevSpan) {
+          prevSpan.focus();
+          const range = document.createRange();
+          range.selectNodeContents(prevSpan);
+          range.collapse(false);
+          window.getSelection().removeAllRanges();
+          window.getSelection().addRange(range);
+        } else {
+          // Normal satırsa ona git
+          const range = document.createRange();
+          range.selectNodeContents(prevRow);
+          range.collapse(false);
+          window.getSelection().removeAllRanges();
+          window.getSelection().addRange(range);
+        }
+      } else {
+        ed.focus();
+      }
+    }
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      e.stopPropagation();
+      const newLine = document.createElement('div');
+      newLine.innerHTML = '<br>';
+      if (row.nextSibling) {
+        ed.insertBefore(newLine, row.nextSibling);
+      } else {
+        ed.appendChild(newLine);
+      }
+      const range = document.createRange();
+      range.setStart(newLine, 0);
+      range.collapse(true);
+      window.getSelection().removeAllRanges();
+      window.getSelection().addRange(range);
+    }
+  });
+
+  setTimeout(() => {
+    span.focus();
+    const range = document.createRange();
+    range.selectNodeContents(span);
+    range.collapse(false);
+    window.getSelection().removeAllRanges();
+    window.getSelection().addRange(range);
+  }, 30);
+}
 let turkarClearTargetId = null;
+let savedTurkarRange = null;
+let savedTurkarLine = null;
+
+function saveTurkarRange() {
+  const sel = window.getSelection();
+  if (!sel.rangeCount) return;
+  savedTurkarRange = sel.getRangeAt(0).cloneRange();
+  const editors = ['turkar-editor', 'turkar-read-editor'];
+  for (const edId of editors) {
+    const ed = document.getElementById(edId);
+    if (!ed) continue;
+    let node = sel.getRangeAt(0).startContainer;
+    // Bu node ed'nin içinde mi?
+    let found = false;
+    let cur = node;
+    while (cur) { if (cur === ed) { found = true; break; } cur = cur.parentNode; }
+    if (!found) continue;
+    // ed'nin direkt child'ını bul
+    let child = node;
+    while (child && child.parentNode !== ed) child = child.parentNode;
+    // child null veya ed'nin kendisiyse — ilk satır direkt text node
+    if (!child || child === ed) {
+      // ed'nin ilk child'ını al
+      child = ed.childNodes[0] || null;
+    }
+    console.log('saved:', edId, child, child?.textContent?.slice(0,20));
+    savedTurkarLine = { edId, child };
+    break;
+  }
+}
 
 function openTurkarClearConfirm(editorId) {
   turkarClearTargetId = editorId;
@@ -1420,6 +1606,16 @@ function turkarReadColor(c) {
   ed.focus();
   document.execCommand('foreColor', false, c);
 }
+function turkarColor(color) {
+  const ed = document.getElementById('turkar-editor');
+  if(ed){ ed.focus(); document.execCommand('foreColor', false, color); }
+}
+
+function insertBullet() {
+  const ed = document.getElementById('turkar-editor');
+  if(ed){ ed.focus(); document.execCommand('insertText', false, '• '); }
+}
+
 function insertBulletRead() {
   const ed = document.getElementById('turkar-read-editor');
   ed.focus();
